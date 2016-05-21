@@ -26,7 +26,6 @@ class MyCat:
     Note: The kwargs may be used for the optional arguments to the 
           cattools.py functions.
     """
-
     def __init__(self, group_id, tract, patch, band='I', usewcs=False, makecuts=False, **kwargs):
         import cattools
 
@@ -35,7 +34,7 @@ class MyCat:
         # distance, and redshift
         #######################################################
 
-        group_info = np.genfromtxt('../../data/group_info.csv', delimiter=',',\
+        group_info = np.genfromtxt('/home/jgreco/data/group_info.csv', delimiter=',',\
                                    dtype='i8,f8,f8,f8,f8,f8,f8,f8,i8', names=True)
         mask = group_info['group_id'] == group_id
         self.D_A = group_info['D_A'][mask][0]
@@ -71,9 +70,31 @@ class MyCat:
             self.make_cuts()
 
     def coord(self):
+        """
+        Get coordinates for all objects in catalog.
+
+        Returns
+        -------
+        coords : ndarry, shape = (N objects, 2)
+            Coordinates (ra, dec) in degrees.
+        """
         return np.dstack((self.ra, self.dec))[0]
 
     def count(self, update_record=False):
+        """
+        Count number of objects in current catalog.
+        
+        Parameter
+        ---------
+        update_record : bool, optional
+            If True, update the count record, which is a list
+            that saves the number of objects after each cut.
+
+        Returns
+        -------
+        counts : int, only returns if update_record=False
+            The number of objects in the current catalog.
+        """
         num = len(self.cat)
         if update_record:
             self.count_record.append(num)
@@ -81,6 +102,10 @@ class MyCat:
             return num
 
     def apply_cuts(self, cut):
+        """
+        Apply cuts in cut = ndarray of bools to the catalog and 
+        all derived properties, and update the count record.
+        """
         self.cat = self.cat[cut].copy(deep=True)
         self.size = self.angsize[cut]
         self.angsize = self.angsize[cut]
@@ -93,6 +118,14 @@ class MyCat:
 
 
     def make_cuts(self):
+        """
+        Build the cut mask and apply cuts with above method. We keep
+        two records as dictionaries:
+
+        cut_record : a record of how many objects get cut by each cut 
+        nan_record : a record of how many objects get cut due to a 
+            derived property (e.g., size, magnitude) begin NaN. 
+        """
         from cuts import cat_cuts, phy_cuts
 
         # source and bad pixel cuts: the "catalog cuts"
