@@ -4,7 +4,7 @@ import numpy as np
 class MyCat:
     """
     This class builds a catalog of objects within a tract and patch that 
-    are near a group from Yang et al. 2007. Properties such as physical 
+    is near a group from Yang et al. 2007. Properties such as physical 
     size and absolute magnitude are calculated assuming the redshift to
     the group. Currently, the cuts are stored as dictionaries in cuts.py.
 
