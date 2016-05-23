@@ -4,11 +4,11 @@ import numpy as np
 
 class MyCat:
     """
-    This class builds a catalog of objects within a tract and patch that 
-    is near a galaxy group. Properties such as physical size and absolute 
-    magnitude are calculated assuming the redshift to the group. Currently, 
-    the cuts are stored as dictionaries in cuts.py, and a group_id must 
-    be given to make the size and  absolute magnitude cuts.
+    This class builds a catalog of objects within an HSC tract and patch. 
+    If a galaxy group id is given, then properties such as physical size 
+    and absolute magnitude are calculated assuming the redshift to the group. 
+    Currently, selection cuts are stored as dictionaries in cuts.py, and a 
+    group id must be given to make the size and absolute magnitude cuts.
 
     Initialization Parameters
     -------------------------
@@ -30,11 +30,7 @@ class MyCat:
     """
     def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, **kwargs):
 
-        #######################################################
-        # Get catalog and exposure for this tract, patch & band
-        # if pixcuts=True, make bad pixel cuts 
-        #######################################################
-
+        # Get catalog and exposure for this tract, patch, & band.
         butler = cattools.get_butler()
         self.exp = cattools.get_exp(tract, patch, band, butler)
         self.wcs = self.exp.getWcs() if usewcs else None
@@ -42,33 +38,28 @@ class MyCat:
         self.count_record = [] # record of number of objects
         self.count(update_record=True)
 
-        #######################################################
-        # Calculate size, mag, absolute mad, and surface 
+        # Calculate angular size, apparent mag,and surface 
         # brightness for all objects in the catalog.
-        #######################################################
-
         self.angsize = cattools.get_angsize(self.cat, wcs=self.wcs, **kwargs)
         self.mag = cattools.get_mag(self.cat, self.exp.getCalib(), **kwargs)
         self.SB = cattools.get_SB(mag=self.mag, angsize=self.angsize)
         self.ra = self.cat.get('coord.ra')*180.0/np.pi
         self.dec = self.cat.get('coord.dec')*180.0/np.pi
 
-        #######################################################
-        # get group info: angular diameter distance, luminosity
-        # distance, and redshift (only if group_id is given)
-        #######################################################
-
+        # If a group_id is given, calculate sizes (in kpc) 
+        # and absolute mags for objects
         self.group_id = group_id
         if group_id is not None:
             self.calc_group_params(group_id)
 
+        # If makecuts=True, then make the selection cuts now.
         if makecuts:
             self.make_cuts()
 
     def calc_group_params(self, group_id):
         """
-        Calculate physical parameters assuming the redshift of the 
-        galaxy group with id = group_id.
+        Calculate physical parameters for all objects in the current 
+        catalog assuming the redshift of the galaxy group with id = group_id.
 
         Parameter
         ---------
@@ -81,11 +72,11 @@ class MyCat:
         group_info = np.genfromtxt('/home/jgreco/data/group_info.csv', delimiter=',',\
                                    dtype='i8,f8,f8,f8,f8,f8,f8,f8,i8', names=True)
         mask = group_info['group_id'] == group_id
-        self.D_A = group_info['D_A'][mask][0]
-        self.D_L = group_info['D_L'][mask][0]
-        self.z = group_info['group_z'][mask][0]
-        self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3 # size in kpc
-        self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)
+        self.D_A = group_info['D_A'][mask][0]     # angular diamter distance
+        self.D_L = group_info['D_L'][mask][0]     # luminosity distance
+        self.z = group_info['group_z'][mask][0]   # redshift
+        self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
+        self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
 
     def coord(self):
         """
@@ -156,7 +147,7 @@ class MyCat:
                 cut &= _c
         self.apply_cuts(cut)
 
-        # size, Mag, and SB cuts: the "physical cuts"
+        # size, abs mag, and SB cuts: the "physical cuts"
         self.nan_record = {}
         self.nan_record.update({'mag':np.isnan(self.mag).sum()})
         if phy_cuts['SB_min'] is not None:
