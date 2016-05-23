@@ -4,9 +4,9 @@ import numpy as np
 class MyCat:
     """
     This class builds a catalog of objects within a tract and patch that 
-    is near a group from Yang et al. 2007. Properties such as physical 
-    size and absolute magnitude are calculated assuming the redshift to
-    the group. Currently, the cuts are stored as dictionaries in cuts.py.
+    is near a galaxy group. Properties such as physical size and absolute 
+    magnitude are calculated assuming the redshift to the group. Currently, 
+    the cuts are stored as dictionaries in cuts.py.
 
     Initialization Parameters
     -------------------------
@@ -115,7 +115,6 @@ class MyCat:
         self.ra = self.ra[cut]
         self.dec = self.dec[cut]
         self.count(update_record=True)
-
 
     def make_cuts(self):
         """
