@@ -1,4 +1,5 @@
 import cuts
+import cattools
 import numpy as np
 
 class MyCat:
@@ -6,18 +7,19 @@ class MyCat:
     This class builds a catalog of objects within a tract and patch that 
     is near a galaxy group. Properties such as physical size and absolute 
     magnitude are calculated assuming the redshift to the group. Currently, 
-    the cuts are stored as dictionaries in cuts.py.
+    the cuts are stored as dictionaries in cuts.py, and a group_id must 
+    be given to make the size and  absolute magnitude cuts.
 
     Initialization Parameters
     -------------------------
-    group_id : int, 
-        The group id from the Yang et al. 2007 catalog
-    tract : int,
+    tract : int
         HSC tract number.
     patch : string
         HSC patch. e.g., '5,7'.
     band : string, optional
         The photometric band of the observation ('G', 'R', 'I', 'Z', or 'Y').
+    group_id : int, optional 
+        The galaxy group id number
     usewcs : bool
         If True, use the WCS to calculate the angular sizes.
     makecuts : bool
@@ -26,20 +28,7 @@ class MyCat:
     Note: The kwargs may be used for the optional arguments to the 
           cattools.py functions.
     """
-    def __init__(self, group_id, tract, patch, band='I', usewcs=False, makecuts=False, **kwargs):
-        import cattools
-
-        #######################################################
-        # get group info: angular diameter distance, luminosity
-        # distance, and redshift
-        #######################################################
-
-        group_info = np.genfromtxt('/home/jgreco/data/group_info.csv', delimiter=',',\
-                                   dtype='i8,f8,f8,f8,f8,f8,f8,f8,i8', names=True)
-        mask = group_info['group_id'] == group_id
-        self.D_A = group_info['D_A'][mask][0]
-        self.D_L = group_info['D_L'][mask][0]
-        self.z = group_info['group_z'][mask][0]
+    def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, **kwargs):
 
         #######################################################
         # Get catalog and exposure for this tract, patch & band
@@ -59,15 +48,44 @@ class MyCat:
         #######################################################
 
         self.angsize = cattools.get_angsize(self.cat, wcs=self.wcs, **kwargs)
-        self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3 # size in kpc
         self.mag = cattools.get_mag(self.cat, self.exp.getCalib(), **kwargs)
-        self.abs_mag = cattools.get_abs_mag(self.D_L, mag=self.mag)
         self.SB = cattools.get_SB(mag=self.mag, angsize=self.angsize)
         self.ra = self.cat.get('coord.ra')*180.0/np.pi
         self.dec = self.cat.get('coord.dec')*180.0/np.pi
 
+        #######################################################
+        # get group info: angular diameter distance, luminosity
+        # distance, and redshift (only if group_id is given)
+        #######################################################
+
+        self.group_id = group_id
+        if group_id is not None:
+            self.calc_group_params(group_id)
+
         if makecuts:
             self.make_cuts()
+
+    def calc_group_params(self, group_id):
+        """
+        Calculate physical parameters assuming the redshift of the 
+        galaxy group with id = group_id.
+
+        Parameter
+        ---------
+        group_id : int
+            The galaxy group identification number.
+        """
+        import cattools
+
+        self.group_id = group_id
+        group_info = np.genfromtxt('/home/jgreco/data/group_info.csv', delimiter=',',\
+                                   dtype='i8,f8,f8,f8,f8,f8,f8,f8,i8', names=True)
+        mask = group_info['group_id'] == group_id
+        self.D_A = group_info['D_A'][mask][0]
+        self.D_L = group_info['D_L'][mask][0]
+        self.z = group_info['group_z'][mask][0]
+        self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3 # size in kpc
+        self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)
 
     def coord(self):
         """
@@ -75,7 +93,7 @@ class MyCat:
 
         Returns
         -------
-        coords : ndarry, shape = (N objects, 2)
+        coords : ndarray, shape = (N objects, 2)
             Coordinates (ra, dec) in degrees.
         """
         return np.dstack((self.ra, self.dec))[0]
@@ -107,13 +125,14 @@ class MyCat:
         all derived properties, and update the count record.
         """
         self.cat = self.cat[cut].copy(deep=True)
-        self.size = self.angsize[cut]
         self.angsize = self.angsize[cut]
         self.mag = self.mag[cut]
-        self.abs_mag = self.abs_mag[cut]
         self.SB = self.SB[cut]
         self.ra = self.ra[cut]
         self.dec = self.dec[cut]
+        if self.group_id:
+            self.size = self.size[cut]
+            self.absmag = self.absmag[cut]
         self.count(update_record=True)
 
     def make_cuts(self):
@@ -132,20 +151,14 @@ class MyCat:
         cut  = np.ones(len(self.cat), dtype=bool)
         for col, val in cat_cuts.iteritems():
             if val is not None:
-                _c = self.cat[col] == val
+                _c = self.cat.get(col) == val
                 self.cut_record.update({col:(~_c).sum()})
                 cut &= _c
         self.apply_cuts(cut)
 
         # size, Mag, and SB cuts: the "physical cuts"
         self.nan_record = {}
-        self.nan_record.update({'size':np.isnan(self.size).sum()})
         self.nan_record.update({'mag':np.isnan(self.mag).sum()})
-        if phy_cuts['size_min'] is not None:
-            self.size[np.isnan(self.size)] = -999.
-            cut = self.size > phy_cuts['size_min']
-            self.apply_cuts(cut)
-            self.cut_record.update({'size_min':(~cut).sum()})
         if phy_cuts['SB_min'] is not None:
             self.SB[np.isnan(self.SB)] = -999.
             cut = self.SB > phy_cuts['SB_min']
@@ -155,13 +168,22 @@ class MyCat:
             cut = self.SB < phy_cuts['SB_max']
             self.apply_cuts(cut)
             self.cut_record.update({'SB_max':(~cut).sum()})
-        if phy_cuts['absmag_max'] is not None:
-            cut = self.abs_mag < phy_cuts['absmag_max']
-            self.apply_cuts(cut)
-            self.cut_record.update({'absmag_max':(~cut).sum()})
+        if self.group_id is None:
+            print '*** no group id given, so no size or abs mag cuts'
+        else:
+            self.nan_record.update({'size':np.isnan(self.size).sum()})
+            if phy_cuts['size_min'] is not None:
+                self.size[np.isnan(self.size)] = -999.
+                cut = self.size > phy_cuts['size_min']
+                self.apply_cuts(cut)
+                self.cut_record.update({'size_min':(~cut).sum()})
+            if phy_cuts['absmag_max'] is not None:
+                cut = self.absmag < phy_cuts['absmag_max']
+                self.apply_cuts(cut)
+                self.cut_record.update({'absmag_max':(~cut).sum()})
 
 if __name__=='__main__':
-    group_id = 8480
-    tract = 9349
-    patch = '4,5'
-    mycat = MyCat(group_id, tract, patch)
+    group_id = 1925
+    tract = 9347
+    patch = '5,8'
+    mycat = MyCat(tract, patch)

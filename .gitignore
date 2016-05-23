@@ -2,4 +2,6 @@
 *.log
 .*.swp
 
+.ipynb_checkpoints
+output/
 tests/

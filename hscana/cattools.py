@@ -20,7 +20,7 @@ def get_mag(cat, calib, flux_model='cmodel.flux', **kwargs):
     mag = calib.getMagnitude(cat.get(flux_model))
     return mag
 
-def get_abs_mag(D_L, cat=None, mag=None, **kwargs):
+def get_absmag(D_L, cat=None, mag=None, **kwargs):
     if mag is None:
         mag = get_mag(cat, **kwargs)
     abs_mag = mag - 5.0*np.log10(D_L*1e6) + 5.0

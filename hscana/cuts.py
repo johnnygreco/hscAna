@@ -9,7 +9,7 @@ cat_cuts = {'flags.pixel.bad':0,
             'parent':0,
             'flags.pixel.bright.object.any':0}
 
-phy_cuts = {'size_min':1.0, # kpc
+phy_cuts = {'size_min':1.5, # kpc
             'SB_min':24.0, 
             'SB_max':30.0,
             'absmag_max':-13.0}
