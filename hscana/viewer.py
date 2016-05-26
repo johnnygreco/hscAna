@@ -1,9 +1,9 @@
 #!/usr/bin/env python 
 
 import numpy as np
-import toolbox as tb
 import lsst.afw.display.ds9 as ds9
 import lsst.daf.persistence
+from toolbox.astro import angsep
 DATA_DIR = "/tigress/HSC/HSC/rerun/production-20151224/"
 butler = lsst.daf.persistence.Butler(DATA_DIR)
 
@@ -31,7 +31,7 @@ def view(cat=None, exp=None, tract=None, patch=None, ID=None, coords=None, filte
         else:
             ra0, dec0 = coords
         ra, dec = cat.get('coord.ra')*180./np.pi, cat.get('coord.dec')*180./np.pi
-        seps = tb.angsep(ra0, dec0, ra, dec)
+        seps = angsep(ra0, dec0, ra, dec)
         cut = seps < maxsep
         cat = cat[seps < maxsep].copy(deep=True)
 
