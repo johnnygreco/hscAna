@@ -2,13 +2,14 @@
 
 import numpy as np
 import utils
-import lsst.afw.display.ds9 as ds9
-import lsst.daf.persistence
 DATA_DIR = "/tigress/HSC/HSC/rerun/production-20151224/"
-butler = lsst.daf.persistence.Butler(DATA_DIR)
 
 def view(cat=None, exp=None, tract=None, patch=None, ID=None, coords=None, filter='I', frame=0, scale="zscale",\
          zoom="to fit", trans=80, draw_ells=True, maxsep=None, shape_model='shape.hsm.moments', pcolor=ds9.GREEN, ccolor=ds9.RED):
+
+    import lsst.afw.display.ds9 as ds9
+    import lsst.daf.persistence
+    butler = lsst.daf.persistence.Butler(DATA_DIR)
 
     if cat is None:
         assert (tract is not None) and (patch is not None), 'if no cat is given, must give tract and patch'
