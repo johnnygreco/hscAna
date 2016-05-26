@@ -1,6 +1,7 @@
 import cuts
 import cattools
 import numpy as np
+from astropy.table import Table
 
 class MyCat:
     """
@@ -66,15 +67,12 @@ class MyCat:
         group_id : int
             The galaxy group identification number.
         """
-        import cattools
-
         self.group_id = group_id
-        group_info = np.genfromtxt('/home/jgreco/data/group_info.csv', delimiter=',',\
-                                   dtype='i8,f8,f8,f8,f8,f8,f8,f8,i8', names=True)
+        group_info = Table.read('/home/jgreco/data/group_info.csv')
         mask = group_info['group_id'] == group_id
         self.D_A = group_info['D_A'][mask][0]     # angular diamter distance
         self.D_L = group_info['D_L'][mask][0]     # luminosity distance
-        self.z = group_info['group_z'][mask][0]   # redshift
+        self.z = group_info['z'][mask][0]   # redshift
         self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
         self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
 
