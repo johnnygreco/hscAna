@@ -68,7 +68,7 @@ class MyCat:
             The galaxy group identification number.
         """
         self.group_id = group_id
-        group_info = Table.read('/home/jgreco/data/group_info.csv')
+        group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
         mask = group_info['group_id'] == group_id
         self.D_A = group_info['D_A'][mask][0]     # angular diamter distance
         self.D_L = group_info['D_L'][mask][0]     # luminosity distance
