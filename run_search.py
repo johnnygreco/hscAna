@@ -42,10 +42,11 @@ def run(group_id, band='I', box_width=3.0, max_sep=2.0, butler=None):
     candy = []
     for tract, patch in group_regions:
         # some tracts and patches are missing
+        print tract, patch
         try:
             mycat = hscana.MyCat(tract, patch, band, group_id, makecuts=True, butler=butler)
         except:
-            print '%%%%% tract '+str(tract)+' patch '+patch+' failed %%%%%' 
+            print '!!!!! FAILED !!!!!'
             continue
         if mycat.count()>0:
             candy.append(mycat)
