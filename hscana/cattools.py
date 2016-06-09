@@ -6,12 +6,14 @@ def get_butler(DATA_DIR="/tigress/HSC/HSC/rerun/production-20151224/"):
     return butler
 
 def get_cat(tract, patch, band='I', butler=None):
-    butler = get_butler() if butler is None else butler
+    if butler is None:
+        butler = get_butler()
     cat = butler.get('deepCoadd_meas', tract=tract, patch=patch, filter='HSC-'+band, immediate=True)
     return cat
 
 def get_exp(tract, patch, band='I', butler=None):
-    butler = get_butler() if butler is None else butler
+    if butler is None:
+        butler = get_butler()
     exp = butler.get('deepCoadd_calexp', tract=tract, patch=patch, filter='HSC-'+band, immediate=True)
     return exp
 

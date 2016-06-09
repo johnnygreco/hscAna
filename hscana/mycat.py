@@ -21,18 +21,21 @@ class MyCat:
         The photometric band of the observation ('G', 'R', 'I', 'Z', or 'Y').
     group_id : int, optional 
         The galaxy group id number
-    usewcs : bool
+    usewcs : bool, opional
         If True, use the WCS to calculate the angular sizes.
-    makecuts : bool
+    makecuts : bool, optional
         If True, make all cuts to the catalog during the initialization
+    butler : Butler object, optional
+        If None, will create a butler at initialization
 
     Note: The kwargs may be used for the optional arguments to the 
           cattools.py functions.
     """
-    def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, **kwargs):
+    def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, butler=None, **kwargs):
 
         # Get catalog and exposure for this tract, patch, & band.
-        butler = cattools.get_butler()
+        if butler is None:
+            butler = cattools.get_butler()
         self.exp = cattools.get_exp(tract, patch, band, butler)
         self.wcs = self.exp.getWcs() if usewcs else None
         self.cat = cattools.get_cat(tract, patch, band, butler)
