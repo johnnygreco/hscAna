@@ -33,9 +33,11 @@ class MyCat:
     """
     def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, butler=None, **kwargs):
 
-        # Get catalog and exposure for this tract, patch, & band.
+        # If creating many mycat objects, you should create one bulter object for intialization.
         if butler is None:
             butler = cattools.get_butler()
+
+        # Get catalog and exposure for this tract, patch, & band.
         self.exp = cattools.get_exp(tract, patch, band, butler)
         self.wcs = self.exp.getWcs() if usewcs else None
         self.cat = cattools.get_cat(tract, patch, band, butler)
@@ -72,10 +74,8 @@ class MyCat:
         """
         self.group_id = group_id
         group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
-        mask = group_info['group_id'] == group_id
-        self.D_A = group_info['D_A'][mask][0]     # angular diamter distance
-        self.D_L = group_info['D_L'][mask][0]     # luminosity distance
-        self.z = group_info['z'][mask][0]   # redshift
+        idx = np.argwhere(group_info['group_id']==group_id)[0,0]
+        self.D_A, self.D_L, self.z = group_info['D_A', 'D_L', 'z'][idx]
         self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
         self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
 
