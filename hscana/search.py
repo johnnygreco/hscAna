@@ -31,7 +31,7 @@ def group_search(group_id, band='I', box_width=3.0, max_sep=2.0, butler=None):
     if butler is None:
         butler = hscana.get_butler()
     idx = np.argwhere(group_info['group_id']==group_id)[0,0]
-    ra_c, dec_c, D_A, D_L = group_info['ra', 'dec', 'D_A', 'D_L'][idx]
+    ra_c, dec_c, z, D_A, D_L = group_info['ra', 'dec', 'z', 'D_A', 'D_L'][idx]
     theta = (box_width/D_A)*180.0/np.pi
     group_regions = get_hsc_regions(skybox(ra_c, dec_c, theta, theta))
     print 'We will extract region of angular size theta =', round(theta, 3), 'degree'
@@ -68,7 +68,7 @@ def group_search(group_id, band='I', box_width=3.0, max_sep=2.0, butler=None):
 
     # output in format for hscMap
     if coords.shape[0]>0:
-        np.savetxt('output/group_candies/group_'+str(group_id)+'_candy_'+str(round(ra_c,1))+'_'+str(round(dec_c,1))+'.csv',
+        np.savetxt('output/group_candies/group_'+str(group_id)+'_z_'+str(round(z,3))+'_ra_dec_'+str(round(ra_c,1))+'_'+str(round(dec_c,1))+'.csv',
                    coords, delimiter=',', header='ra,dec', fmt='%.8f')
     else:
         print 'group', group_id, 'has zero candidates'
