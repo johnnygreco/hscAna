@@ -1,6 +1,6 @@
 import numpy as np
 
-def get_butler(DATA_DIR="/tigress/HSC/HSC/rerun/production-20151224/"):
+def get_butler(DATA_DIR="/tigress/HSC/HSC/rerun/production-20160523/"):
     import lsst.daf.persistence
     butler = lsst.daf.persistence.Butler(DATA_DIR)
     return butler

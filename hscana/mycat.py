@@ -6,7 +6,7 @@ from astropy.table import Table
 class MyCat:
     """
     This class builds a catalog of objects within an HSC tract and patch. 
-    If a galaxy group id is given, then properties such as physical size 
+    If a galaxy group id or redshift is given, then properties such as physical size 
     and absolute magnitude are calculated assuming the redshift to the group. 
     Currently, selection cuts are stored as dictionaries in cuts.py, and a 
     group id must be given to make the size and absolute magnitude cuts.
@@ -21,6 +21,8 @@ class MyCat:
         The photometric band of the observation ('G', 'R', 'I', 'Z', or 'Y').
     group_id : int, optional 
         The galaxy group id number
+    group_z : float, optional
+        The redshift to the group
     usewcs : bool, opional
         If True, use the WCS to calculate the angular sizes.
     makecuts : bool, optional
@@ -31,7 +33,7 @@ class MyCat:
     Note: The kwargs may be used for the optional arguments to the 
           cattools.py functions.
     """
-    def __init__(self, tract, patch, band='I', group_id=None, usewcs=False, makecuts=False, butler=None, **kwargs):
+    def __init__(self, tract, patch, band='I', group_id=None, group_z=None, usewcs=False, makecuts=False, butler=None, **kwargs):
 
         # If creating many mycat objects, you should create one bulter object for intialization.
         if butler is None:
@@ -55,14 +57,15 @@ class MyCat:
         # If a group_id is given, calculate sizes (in kpc) 
         # and absolute mags for objects
         self.group_id = group_id
-        if group_id is not None:
-            self.calc_group_params(group_id)
+        self.group_z = group_z
+        if (group_id is not None) or (group_z is not None):
+            self.calc_group_params(group_id, group_z)
 
         # If makecuts=True, then make the selection cuts now.
         if makecuts:
             self.make_cuts()
 
-    def calc_group_params(self, group_id):
+    def calc_group_params(self, group_id=None, group_z=None):
         """
         Calculate physical parameters for all objects in the current 
         catalog assuming the redshift of the galaxy group with id = group_id.
@@ -72,12 +75,21 @@ class MyCat:
         group_id : int
             The galaxy group identification number.
         """
-        self.group_id = group_id
-        group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
-        idx = np.argwhere(group_info['group_id']==group_id)[0,0]
-        self.D_A, self.D_L, self.z = group_info['D_A', 'D_L', 'z'][idx]
-        self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
-        self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
+        if group_z is not None:
+            from toolbox.cosmo import Cosmology
+            cosmo = Cosmology()
+            self.D_A, self.D_L, self.group_z = cosmo.D_A(group_z), cosmo.D_L(group_z), group_z
+            self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
+            self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
+        elif group_id is not None:
+            self.group_id = group_id
+            group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
+            idx = np.argwhere(group_info['group_id']==group_id)[0,0]
+            self.D_A, self.D_L, self.group_z = group_info['D_A', 'D_L', 'z'][idx]
+            self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
+            self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
+        else:
+            print 'Need group_id or redshift to calculate group params!'
 
     def coord(self):
         """
@@ -122,7 +134,7 @@ class MyCat:
         self.SB = self.SB[cut]
         self.ra = self.ra[cut]
         self.dec = self.dec[cut]
-        if self.group_id:
+        if self.group_id or self.group_z:
             self.size = self.size[cut]
             self.absmag = self.absmag[cut]
         self.count(update_record=True)
@@ -160,8 +172,8 @@ class MyCat:
             cut = self.SB < phy_cuts['SB_max']
             self.apply_cuts(cut)
             self.cut_record.update({'SB_max':(~cut).sum()})
-        if self.group_id is None:
-            print '*** no group id given, so no size or abs mag cuts'
+        if (self.group_id is None) and (self.group_z is None):
+            print '*** no group id or redshift given, so no size or abs mag cuts'
         else:
             self.nan_record.update({'size':np.isnan(self.size).sum()})
             if phy_cuts['size_min'] is not None:
