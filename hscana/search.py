@@ -17,6 +17,10 @@ def group_search(group_id, coords_3d=None, band='I', box_width=3.0, max_sep=2.0,
         Galaxy group identification number.
     band : string, optional, default is 'I'
         HSC band (G, R, I, Z, or Y).
+    coords_3d : list [ra, dec, z], optional
+        Luminosity-weighted 3D coordinate of group. Default
+        is None. If is None, coordinates must be in group_info
+        file.
     box_width : float, optional, default is 3 degree
         Angular width of 'skybox' to extract around the groups
         luminosity weighted center. Must be in degrees.
