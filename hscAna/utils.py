@@ -1,6 +1,6 @@
 import numpy as np
 
-def skybox(ra_c, dec_c, width, height):
+def skybox(ra_c, dec_c, width, height=None):
     """
     Calculate the four corners of a box centered at (ra_c, dec_c).
     All input parameters must be in degrees.
@@ -13,8 +13,9 @@ def skybox(ra_c, dec_c, width, height):
         The central dec of the box in degrees.
     width : float
         The angular width of the box in degrees.
-    height : float
+    height : float, optional
         The angular height of the box in degrees.
+        If None, will set height=width. 
 
     Returns
     -------
@@ -32,6 +33,8 @@ def skybox(ra_c, dec_c, width, height):
     percent for a box with width=height=3 degrees at a 
     declination of 80 degrees, which is fine for our purposes. 
     """
+    if height is None:
+        height = width
     dec_lo = dec_c - height/2.0
     dec_hi = dec_c + height/2.0
     ra_min_lo = ra_c - width/2.0/np.cos(dec_lo*np.pi/180.)
