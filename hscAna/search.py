@@ -21,9 +21,9 @@ def group_search(group_id, coords_3d=None, band='I', box_width=3.0, max_sep=2.0,
         Luminosity-weighted 3D coordinate of group. Default
         is None. If is None, coordinates must be in group_info
         file.
-    box_width : float, optional, default is 3 degree
+    box_width : float, optional, default is 3 Mpc
         Angular width of 'skybox' to extract around the groups
-        luminosity weighted center. Must be in degrees.
+        luminosity weighted center. Must be in Mpc.
     max_sep : float, optional, default is 2 arcsec
         Maximum separation for which two objects are considered
         to be the same object. Must be in arcseconds. 

@@ -7,22 +7,22 @@ def skybox(ra_c, dec_c, width, height):
 
     Parameters
     ----------
-    ra_c: float
+    ra_c : float
         The central ra of the box in degrees.
-    dec_c: float
+    dec_c : float
         The central dec of the box in degrees.
-    width: float
+    width : float
         The angular width of the box in degrees.
-    height: float
+    height : float
         The angular height of the box in degrees.
 
     Returns
     -------
-    box_coords: list of tuples
+    box_coords : list of tuples
         The four coordinates for the box corners.
 
-    Notes
-    -----
+    Note
+    ----
     This calculation is only an approximation, which is not 
     self-consistent. The declination limits are calculated 
     assuming constant ra values, but the ra limits are 
@@ -51,24 +51,37 @@ def get_hsc_regions(box_coords, butler=None):
 
     Parameters
     ----------
-    box_coords: list of tuples
+    box_coords : list of tuples
         The four coordinates for the box corners. This is the 
-        output of the skybox function.
-    butler: Butler object, optional
+        output of the skybox function. If only one coordinate
+        is given, will return a single tract and patch. 
+    butler : Butler object, optional
         If None, then a will be created in this function.
         Default is None.
 
     Returns
     -------
-    regions: structured ndarray
+    regions : structured ndarray
         The tracts and patches within the skybox. The columns of 
         the array are 'tract' and 'patch'.
+
+    Note
+    ----
+    This may give incorrect answers on regions that are larger than a tract, 
+    which is ~1.5 degree = 90 arcminute.
     """
     import lsst.afw.coord as afwCoord
     import lsst.afw.geom as afwGeom
     if butler is None:
-        from cattools import get_butler 
+        from pipeTools import get_butler 
         butler = get_butler()
+    if len(box_coords)==4:
+        from toolbox.astro import angsep
+        (ra1, dec1), (ra2, dec2) = box_coords[0], box_coords[2]
+        if angsep(ra1, dec1, ra2, dec2, sepunits='arcmin') > 90.0:
+            print '\n********* WARNING *********'
+            print 'Region larger than a tract'
+            print '***************************\n'
     skymap = butler.get('deepCoadd_skyMap', immediate=True)
     coordList = [afwCoord.IcrsCoord(afwGeom.Angle(ra, afwGeom.degrees),\
                  afwGeom.Angle(dec, afwGeom.degrees)) for ra, dec in box_coords]

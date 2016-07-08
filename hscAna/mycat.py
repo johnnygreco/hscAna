@@ -1,5 +1,5 @@
 import cuts
-import cattools
+import pipeTools
 import numpy as np
 from astropy.table import Table
 
@@ -31,26 +31,26 @@ class MyCat:
         If None, will create a butler at initialization
 
     Note: The kwargs may be used for the optional arguments to the 
-          cattools.py functions.
+          pipeTools.py functions.
     """
     def __init__(self, tract, patch, band='I', group_id=None, group_z=None, usewcs=False, makecuts=False, butler=None, **kwargs):
 
         # If creating many mycat objects, you should create one bulter object for intialization.
         if butler is None:
-            butler = cattools.get_butler()
+            butler = pipeTools.get_butler()
 
         # Get catalog and exposure for this tract, patch, & band.
-        self.exp = cattools.get_exp(tract, patch, band, butler)
+        self.exp = pipeTools.get_exp(tract, patch, band, butler)
         self.wcs = self.exp.getWcs() if usewcs else None
-        self.cat = cattools.get_cat(tract, patch, band, butler)
+        self.cat = pipeTools.get_cat(tract, patch, band, butler)
         self.count_record = [] # record of number of objects
         self.count(update_record=True)
 
         # Calculate angular size, apparent mag,and surface 
         # brightness for all objects in the catalog.
-        self.angsize = cattools.get_angsize(self.cat, wcs=self.wcs, **kwargs)
-        self.mag = cattools.get_mag(self.cat, self.exp.getCalib(), **kwargs)
-        self.SB = cattools.get_SB(mag=self.mag, angsize=self.angsize)
+        self.angsize = pipeTools.get_angsize(self.cat, wcs=self.wcs, **kwargs)
+        self.mag = pipeTools.get_mag(self.cat, self.exp.getCalib(), **kwargs)
+        self.SB = pipeTools.get_SB(mag=self.mag, angsize=self.angsize)
         self.ra = self.cat.get('coord.ra')*180.0/np.pi
         self.dec = self.cat.get('coord.dec')*180.0/np.pi
 
@@ -80,14 +80,14 @@ class MyCat:
             cosmo = Cosmology()
             self.D_A, self.D_L, self.group_z = cosmo.D_A(group_z), cosmo.D_L(group_z), group_z
             self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
-            self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
+            self.absmag = pipeTools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
         elif group_id is not None:
             self.group_id = group_id
             group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
             idx = np.argwhere(group_info['group_id']==group_id)[0,0]
             self.D_A, self.D_L, self.group_z = group_info['D_A', 'D_L', 'z'][idx]
             self.size = self.angsize*self.D_A*(1.0/206265.)*1.0e3      # size in kpc
-            self.absmag = cattools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
+            self.absmag = pipeTools.get_absmag(self.D_L, mag=self.mag)  # absolute magnitude
         else:
             print 'Need group_id or redshift to calculate group params!'
 
