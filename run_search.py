@@ -2,8 +2,8 @@
 
 import numpy as np
 from astropy.table import Table
-import hscana
-from hscana.search import group_search
+import hscAna
+from hscAna.search import group_search
 group_info = Table.read('/home/jgreco/data/groups/group_info.csv')
 print len(group_info), 'galaxy groups in catalog'
 
