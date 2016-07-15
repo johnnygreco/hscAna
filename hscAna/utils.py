@@ -76,8 +76,9 @@ def get_hsc_regions(box_coords, butler=None):
     import lsst.afw.coord as afwCoord
     import lsst.afw.geom as afwGeom
     if butler is None:
-        from pipeTools import get_butler 
-        butler = get_butler()
+        import lsst.daf.persistence
+        from myPipe import dataDIR
+        butler = lsst.daf.persistence.Butler(dataDIR)
     if len(box_coords)==4:
         from toolbox.astro import angsep
         (ra1, dec1), (ra2, dec2) = box_coords[0], box_coords[2]
