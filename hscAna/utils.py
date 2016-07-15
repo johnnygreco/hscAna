@@ -1,3 +1,8 @@
+
+from __future__ import division, print_function
+
+__all__ = ['skybox', 'get_hsc_regions', 'radec_to_tractpatch']
+
 import numpy as np
 
 def skybox(ra_c, dec_c, width, height=None):
@@ -83,9 +88,9 @@ def get_hsc_regions(box_coords, butler=None):
         from toolbox.astro import angsep
         (ra1, dec1), (ra2, dec2) = box_coords[0], box_coords[2]
         if angsep(ra1, dec1, ra2, dec2, sepunits='arcmin') > 90.0:
-            print '\n********* WARNING *********'
-            print 'Region larger than a tract'
-            print '***************************\n'
+            print('\n********* WARNING *********')
+            print('Region larger than a tract')
+            print('***************************\n')
     skymap = butler.get('deepCoadd_skyMap', immediate=True)
     coordList = [afwCoord.IcrsCoord(afwGeom.Angle(ra, afwGeom.degrees),\
                  afwGeom.Angle(dec, afwGeom.degrees)) for ra, dec in box_coords]
@@ -96,3 +101,45 @@ def get_hsc_regions(box_coords, butler=None):
             patchIndex = patchInfo.getIndex()
             regions.append((tractInfo.getId(), str(patchIndex[0])+','+str(patchIndex[1])))
     return np.array(regions, dtype=[('tract', int), ('patch', 'S4')])
+
+def radec_to_tractpatch(ra, dec, butler=None, patch_as_str=True):
+    """
+    Get the tract and patch associated with the given ra and dec.
+
+    Parameters
+    ----------
+    ra : float
+        Right ascension of desired tract and patch.
+    dec : float
+        Declination of the desired tract and patch.
+    butler : Bulter object, optional
+        If None, create a butler object within function. 
+        Otherwise, must be a butler object.
+    patch_as_str : bool, optional
+        If True, return patch as a string (e.g., '0,1').
+        Otherwise, return patch as tuple (defualt = True).
+
+    Returns
+    -------
+    tract : int
+        HSC tract
+    patch : string or tuple
+        HSC patch
+    """
+    import lsst.afw.coord as afwCoord
+    import lsst.afw.geom as afwGeom
+    if butler is None:
+        import lsst.daf.persistence
+        from myPipe import dataDIR
+        butler = lsst.daf.persistence.Butler(dataDIR)
+    skymap = butler.get('deepCoadd_skyMap', immediate=True)
+    coord = afwCoord.IcrsCoord(afwGeom.Angle(ra, afwGeom.degrees), afwGeom.Angle(dec, afwGeom.degrees))
+    tractInfo = skymap.findTract(coord)
+    patchInfo = tractInfo.findPatch(coord)
+    tract = tractInfo.getId()
+    patch = patchInfo.getIndex()
+    if patch_as_str:
+        patch = str(patch[0])+','+str(patch[1])
+    print(tract, patch)
+    return tract, patch
+

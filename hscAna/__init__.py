@@ -1,3 +1,3 @@
-from pipeTools import *
-from cuts import *
-from mycat import MyCat
+from .utils import *
+from .write import *
+from .myPipe import MyPipe
