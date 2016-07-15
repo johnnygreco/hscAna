@@ -11,11 +11,11 @@ def get_cat(tract, patch, band='I', butler=None):
     cat = butler.get('deepCoadd_meas', tract=tract, patch=patch, filter='HSC-'+band, immediate=True)
     return cat
 
-def get_exp(tract, patch, band='I', butler=None):
+def get_calexp(tract, patch, band='I', butler=None):
     if butler is None:
         butler = get_butler()
-    exp = butler.get('deepCoadd_calexp', tract=tract, patch=patch, filter='HSC-'+band, immediate=True)
-    return exp
+    calexp = butler.get('deepCoadd_calexp', tract=tract, patch=patch, filter='HSC-'+band, immediate=True)
+    return calexp
 
 def get_mag(cat, calib, flux_model='cmodel.flux', **kwargs):
     calib.setThrowOnNegativeFlux(False)  # don't raise an exception when we encounter a negative or NaN flux
