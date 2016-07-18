@@ -3,16 +3,6 @@ from __future__ import division, print_function
 
 __all__ = ['make_outdir', 'write_deepCoadd_fits']
 
-def _mkdir(directory):
-    """
-    Private function that makes a directory 
-    if it doesn't exist.
-    """
-    import os
-    if not os.path.isdir(directory):
-        print('created', directory)
-        os.mkdir(directory)
-
 def make_default_outdir(tract, patch, band):
     """
     Make the default output directory for the deepCoadd
@@ -26,13 +16,15 @@ def make_default_outdir(tract, patch, band):
     outdir = os.path.dirname(os.path.abspath(__file__))
     outdir = os.path.dirname(outdir)
 
-    dirs = ['output/deepCoadds', 'HSC-'+band.upper(),
+    dirs = ['output', 'deepCoadds', 'HSC-'+band.upper(),
             str(tract), patch[0]+'-'+patch[-1]]
 
     # build path, make directories if they don't exist
     for d in dirs:
         outdir = os.path.join(outdir, d)
-        _mkdir(outdir)
+        if not os.path.isdir(outdir):
+            print('created', outdir)
+            os.mkdir(outdir)
 
     return outdir
 
