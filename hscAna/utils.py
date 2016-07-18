@@ -140,6 +140,4 @@ def radec_to_tractpatch(ra, dec, butler=None, patch_as_str=True):
     patch = patchInfo.getIndex()
     if patch_as_str:
         patch = str(patch[0])+','+str(patch[1])
-    print(tract, patch)
     return tract, patch
-

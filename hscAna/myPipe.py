@@ -1,7 +1,7 @@
 
 from __future__ import division, print_function
 
-__all__ = ['MyPipe']
+__all__ = ['dataDIR', 'MyPipe']
 
 import numpy as np
 dataDIR='/tigress/HSC/HSC/rerun/production-20160523/'

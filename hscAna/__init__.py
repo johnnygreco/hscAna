@@ -1,3 +1,3 @@
 from .utils import *
 from .write import *
-from .myPipe import MyPipe
+from .myPipe import *

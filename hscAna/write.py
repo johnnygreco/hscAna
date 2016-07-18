@@ -1,7 +1,7 @@
 
 from __future__ import division, print_function
 
-__all__ = ['make_outdir', 'write_deepCoadd_fits']
+__all__ = ['make_default_outdir', 'write_deepCoadd_fits']
 
 def make_default_outdir(tract, patch, band):
     """
@@ -28,7 +28,7 @@ def make_default_outdir(tract, patch, band):
 
     return outdir
 
-def write_deepCoadd_fits(tract, patch, band='I', outdir='default'):
+def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None):
     """
     Write deepCoadd fits images for the given tract, patch, and band.
     Will write individual files for the image, bad pixel mask, detected
@@ -45,6 +45,8 @@ def write_deepCoadd_fits(tract, patch, band='I', outdir='default'):
     outdir : string, optional
         The output directory. If 'default', the directory 
         will be the output of make_default_outdir.
+    butler : Butler object, optional
+        If None, a Butler object will be created. 
     
     Notes
     -----
@@ -60,7 +62,7 @@ def write_deepCoadd_fits(tract, patch, band='I', outdir='default'):
     from myPipe import MyPipe
 
     band = band.upper()
-    pipe = MyPipe(tract, patch, band=band)
+    pipe = MyPipe(tract, patch, band=band, butler=butler)
 
     if outdir=='default':
         outdir = make_default_outdir(tract, patch, band)
