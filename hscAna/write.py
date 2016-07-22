@@ -28,7 +28,7 @@ def make_default_outdir(tract, patch, band):
 
     return outdir
 
-def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None):
+def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None, prefix=None):
     """
     Write deepCoadd fits images for the given tract, patch, and band.
     Will write individual files for the image, bad pixel mask, detected
@@ -47,6 +47,8 @@ def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None):
         will be the output of make_default_outdir.
     butler : Butler object, optional
         If None, a Butler object will be created. 
+    prefix : string, optional
+        File name prefix. 
     
     Notes
     -----
@@ -76,6 +78,9 @@ def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None):
     # write images
     getters = [pipe.get_img, pipe.get_badmask, pipe.get_detmask, pipe.get_sigma]
     labels = ['img', 'bad', 'det', 'sig']
+    if prefix is not None:
+        for i in range(len(labels)):
+            labels[i] = prefix+'_'+labels[i]
     headnums = [0, 1, 1, 2]
     for get, lab, num in zip(getters, labels, headnums):
         print('writing', lab+'.fits')
@@ -83,8 +88,9 @@ def write_deepCoadd_fits(tract, patch, band='I', outdir='default', butler=None):
         fits.writeto(fn, get(), headers[num], clobber=True)
 
     # write psf fits file
-    fn = os.path.join(outdir, 'psf.fits')
-    print('writing', 'psf.fits')
+    psf_file = prefix+'_psf.fits' if prefix else 'psf.fits'
+    fn = os.path.join(outdir, psf_file)
+    print('writing', psf_file)
     pipe.calexp.getPsf().computeImage().writeFits(fn)
 
 if __name__=='__main__':
