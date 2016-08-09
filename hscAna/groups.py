@@ -8,8 +8,9 @@ from __future__ import print_function
 __all__ = ['get_group_fits']
 
 import numpy as np
+import imtools
 
-def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', outdir=None, butler=None):
+def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', butler=None):
     """
     Get fits files within width/2 of the given coords.  
 
@@ -24,9 +25,6 @@ def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', outdir=None, b
         The width of the data region in Mpc.
     band : string, optional
         The photometric band (GRIZY). 
-    outdir : string, optional
-        If not None, the output directory, else 
-        it will be ../output/
     butler : Butler object
         If None, a butler will be created.
 
@@ -46,15 +44,18 @@ def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', outdir=None, b
     if butler is None:
         import lsst.daf.persistence
         butler = lsst.daf.persistence.Butler(dataDIR)
-    if outdir is None: 
-        outdir = os.path.dirname(os.path.abspath(__file__))
-        outdir = os.path.join(os.path.dirname(outdir), 'output')
-    outdir = os.path.join(outdir, 'group_'+str(group_id))
-    if not os.path.isdir(outdir):
-        print('creating', outdir)
-        os.mkdir(outdir)
+    main_out = os.path.dirname(os.path.abspath(__file__))
+    main_out= os.path.join(main_out, 'output')
 
-    cmd = 'rsync -avc '+outdir+' '+copydir
+
+    group_dir = os.path.join(main_out, 'group_'+str(group_id))
+    if not os.path.isdir(group_dir):
+        print('created', group_dir)
+        os.mkdir(group_dir)
+
+    cmd = 'rsync -avc '+group_dir+' '+copydir
+
+    band_dir = os.path.join(group_dir, 'HSC-'+band)
 
     D_A = Cosmology().D_A(z) # angular diameter distance
     theta = (box_width/D_A)*180.0/np.pi
@@ -64,20 +65,29 @@ def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', outdir=None, b
 
     for tract, patch in regions:
         print('getting deepCoadds for:', 'HSC-'+band+':', tract, patch)
-        prefix = 'HSC-'+band.upper()+'_'+str(tract)+'_'+patch[0]+'-'+patch[-1]
+        outdir = group_dir
 
-        write_deepCoadd_fits(tract, patch, band, butler=butler, outdir=outdir, prefix=prefix)
+        # make output directories if they don't exist
+        dirs = ['HSC-'+band, str(tract), patch[0]+'-'+patch[-1]]
+        for d in dirs:
+            outdir = os.path.join(outdir, d)
+            if not os.path.isdir(outdir):
+                print('created', outdir)
+                os.mkdir(outdir)
+
+        write_deepCoadd_fits(tract, patch, band, butler=butler, outdir=outdir)
+        imtools.sig_to_wts(os.path.join(outdir, 'sig.fits'), os.path.join(outdir, 'wts.fits'))
+        imtools.wts_with_badpix(os.path.join(outdir, 'wts.fits'), os.path.join(outdir, 'bad.fits'),
+                                os.path.join(outdir, 'wts_bad.fits'))
 
         # rsync fits files to different machine due to limited disk space
         os.system(cmd)
 
         # delete files
-        files = os.listdir(outdir)
-        for f in files:
-            print('deleting', f)
-            os.remove(os.path.join(outdir, f))
-    print('deleting', outdir)
-    shutil.rmtree(outdir)
+        print('deleting', band_dir)
+        shutil.rmtree(band_dir)
+    print('deleting', group_dir)
+    shutil.rmtree(group_dir)
 
 if __name__=='__main__':
     import argparse
@@ -88,6 +98,5 @@ if __name__=='__main__':
     parser.add_argument('group_id', type=int, help='group id')
     parser.add_argument('-w', '--box_width', help='width of the data region in Mpc', default=3.0)
     parser.add_argument('-b', '--band', help='observation band', default='I')
-    parser.add_argument('-o', '--outdir', help='output directory', default=None)
     args = parser.parse_args()
-    get_group_fits(args.ra, args.dec, args.z, args.group_id, args.box_width, args.band, args.outdir)
+    get_group_fits(args.ra, args.dec, args.z, args.group_id, args.box_width, args.band)
