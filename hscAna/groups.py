@@ -88,6 +88,7 @@ def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', butler=None):
         shutil.rmtree(band_dir)
     print('deleting', group_dir)
     shutil.rmtree(group_dir)
+    print('task complete!')
 
 if __name__=='__main__':
     import argparse
