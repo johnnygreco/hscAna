@@ -97,7 +97,7 @@ if __name__=='__main__':
     parser.add_argument('dec', type=float, help='luminosity-weighted dec of group')
     parser.add_argument('z', type=float, help='luminosity-weighted redshift of group')
     parser.add_argument('group_id', type=int, help='group id')
-    parser.add_argument('-w', '--box_width', help='width of the data region in Mpc', default=3.0)
+    parser.add_argument('-w', '--box_width', type=float, help='width of the data region in Mpc', default=3.0)
     parser.add_argument('-b', '--band', help='observation band', default='I')
     args = parser.parse_args()
     get_group_fits(args.ra, args.dec, args.z, args.group_id, args.box_width, args.band)
