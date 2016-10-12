@@ -19,7 +19,7 @@ def get_group_fits(ra, dec, z, group_id, box_width=3.0, band='I', butler=None):
     ra, dec, z : float
         The luminosity-weighted right ascension, 
         declination and redshift of a galaxy group.
-    group_id : int
+    group_id : int or string
         The galaxy group id. 
     box_width : float, optional 
         The width of the data region in Mpc.
@@ -96,7 +96,7 @@ if __name__=='__main__':
     parser.add_argument('ra', type=float, help='luminosity-weighted ra of group')
     parser.add_argument('dec', type=float, help='luminosity-weighted dec of group')
     parser.add_argument('z', type=float, help='luminosity-weighted redshift of group')
-    parser.add_argument('group_id', type=int, help='group id')
+    parser.add_argument('group_id', type=str, help='group id')
     parser.add_argument('-w', '--box_width', type=float, help='width of the data region in Mpc', default=3.0)
     parser.add_argument('-b', '--band', help='observation band', default='I')
     args = parser.parse_args()

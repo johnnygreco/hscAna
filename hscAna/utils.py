@@ -29,14 +29,8 @@ def skybox(ra_c, dec_c, width, height=None):
 
     Note
     ----
-    This calculation is only an approximation, which is not 
-    self-consistent. The declination limits are calculated 
-    assuming constant ra values, but the ra limits are 
-    calculated at the 'lo' and 'hi' declination values. In 
-    addition, this assumes the angular separation is small. 
-    I found the calculation to be accurate to a few 
-    percent for a box with width=height=3 degrees at a 
-    declination of 80 degrees, which is fine for our purposes. 
+    This calculation is only an approximation, as it 
+    assumes the angular separation is small. 
     """
     if height is None:
         height = width
